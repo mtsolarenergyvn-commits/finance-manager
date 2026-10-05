@@ -6,8 +6,10 @@ const ExcelJS = require('exceljs');
 const XLSX = require('xlsx');
 
 const app = express();
-const PORT = 3000;
-
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});
 const dict = {
     vi: {
         brand: "MT SOLAR - HỆ THỐNG QUẢN TRỊ DOANH NGHIỆP",
