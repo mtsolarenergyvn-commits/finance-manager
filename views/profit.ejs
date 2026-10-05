@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Báo Cáo Lợi Nhuận Tổng Hợp</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js để vẽ biểu đồ -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+
+        .card-stat {
+            border-radius: 12px;
+            color: white;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.08);
+            min-height: 140px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        /* Đồng bộ màu sắc nhẹ nhàng, sang trọng cho 3 ô */
+        .bg-revenue {
+            background: linear-gradient(135deg, #198754, #20c997);
+        }
+
+        .bg-expense {
+            background: linear-gradient(135deg, #dc3545, #ff6b6b);
+        }
+
+        .bg-profit {
+            background: linear-gradient(135deg, #0d6efd, #0dcaf0);
+        }
+    </style>
+</head>
+
+<body class="bg-light">
+    <div class="container mt-4 mb-5">
+        <!-- Tiêu đề & Nút Xuất Excel -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <a href="/" class="btn btn-secondary btn-sm mb-2"><i class="fas fa-arrow-left"></i> Quay lại Trang
+                    chủ</a>
+                <h2 class="text-primary fw-bold mb-0">Báo Cáo Lợi Nhuận Tổng Hợp</h2>
+            </div>
+            <% let profit=totalRevenue - totalExpense; let margin=totalRevenue> 0 ? ((profit / totalRevenue) *
+                100).toFixed(1) : 0;
+                %>
+                <div>
+                    <a href="/profit/export?from=<%= typeof from !== 'undefined' ? from : '' %>&to=<%= typeof to !== 'undefined' ? to : '' %>"
+                        class="btn btn-success">
+                        <i class="fas fa-file-excel"></i> Xuất Excel Báo Cáo
+                    </a>
+                </div>
+        </div>
+
+        <!-- Form Lọc Thời Gian (Đã fix action và method) -->
+        <div class="card shadow-sm p-3 mb-4 bg-white rounded border-0">
+            <form action="/profit" method="GET" class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Từ ngày:</label>
+                    <input type="date" class="form-control" name="from"
+                        value="<%= typeof from !== 'undefined' ? from : '' %>">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Đến ngày:</label>
+                    <input type="date" class="form-control" name="to"
+                        value="<%= typeof to !== 'undefined' ? to : '' %>">
+                </div>
+                <div class="col-md-6">
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-filter"></i> Xem Báo Cáo</button>
+                    <a href="/profit" class="btn btn-outline-secondary">Tất Cả Thời Gian</a>
+                </div>
+            </form>
+        </div>
+
+        <!-- 3 Thẻ Tổng Quan Cân Bằng Nhau -->
+        <div class="row g-4 mb-4">
+            <div class="col-md-4">
+                <div class="card card-stat bg-revenue p-3 text-center">
+                    <h6 class="text-uppercase fw-semibold mb-1"><i class="fas fa-chart-line"></i> Tổng Doanh Thu</h6>
+                    <h3 class="fw-bold mb-0">
+                        <%= Number(totalRevenue).toLocaleString('vi-VN') %> đ
+                    </h3>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card card-stat bg-expense p-3 text-center">
+                    <h6 class="text-uppercase fw-semibold mb-1"><i class="fas fa-wallet"></i> Tổng Chi Phí</h6>
+                    <h3 class="fw-bold mb-0">
+                        <%= Number(totalExpense).toLocaleString('vi-VN') %> đ
+                    </h3>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card card-stat bg-profit p-3 text-center">
+                    <h6 class="text-uppercase fw-semibold mb-1"><i class="fas fa-hand-holding-dollar"></i> Lợi Nhuận
+                        Thực Tế</h6>
+                    <h3 class="fw-bold mb-0">
+                        <%= Number(profit).toLocaleString('vi-VN') %> đ
+                    </h3>
+                    <small class="fw-bold mt-1">Tỷ suất: <%= margin %>%</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Khu vực Biểu Đồ Trực Quan -->
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card shadow-sm p-4 border-0">
+                    <h5 class="fw-bold mb-3"><i class="fas fa-chart-bar text-primary"></i> Biểu Đồ Trực Quan Tài Chính
+                    </h5>
+                    <div style="position: relative; height: 320px; width: 100%;">
+                        <canvas id="profitChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ghi Chú Thông Tin -->
+        <div class="card shadow-sm p-4 border-0">
+            <h5 class="fw-bold mb-3"><i class="fas fa-circle-info text-secondary"></i> Thông Tin Bổ Sung & Ghi Chú Báo
+                Cáo</h5>
+            <ul class="text-muted mb-0">
+                <li>Báo cáo tính toán chính xác tổng tiền doanh thu và chi phí trong khoảng thời gian đã chọn từ hệ
+                    thống.</li>
+                <li>Công thức tính Lợi Nhuận: <strong class="text-dark">Lợi Nhuận Thực Tế = Tổng Doanh Thu - Tổng Chi
+                        Phí</strong>.</li>
+                <li>Công thức Tỷ suất lợi nhuận: <strong class="text-dark">(Lợi Nhuận / Doanh Thu) * 100</strong>.</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Script vẽ biểu đồ động bằng Chart.js -->
+    <script>
+        const ctx = document.getElementById('profitChart').getContext('2d');
+        const profitChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Tổng Doanh Thu', 'Tổng Chi Phí', 'Lợi Nhuận Thực Tế'],
+                datasets: [{
+                    label: 'Giá trị (VNĐ)',
+                    data: [<%= totalRevenue %>, <%= totalExpense %>, <%= profit %>],
+                    backgroundColor: [
+                        'rgba(25, 135, 84, 0.7)',
+                        'rgba(220, 53, 69, 0.7)',
+                        'rgba(13, 110, 253, 0.7)'
+                    ],
+                    borderColor: [
+                        'rgb(25, 135, 84)',
+                        'rgb(220, 53, 69)',
+                        'rgb(13, 110, 253)'
+                    ],
+                    borderWidth: 2,
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function (value) {
+                                return value.toLocaleString('vi-VN') + ' đ';
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    legend: { display: false }
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>

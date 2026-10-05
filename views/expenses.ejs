@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Quản Lý Chi Phí</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <style>
+        /* CSS cho thanh cuộn chuyên nghiệp của bảng */
+        .table-responsive-container {
+            max-height: 450px;
+            /* Chiều cao tối đa trước khi hiện thanh cuộn */
+            overflow-y: auto;
+            /* Tự động bật thanh cuộn dọc */
+            position: relative;
+        }
+
+        /* Cố định tiêu đề bảng khi cuộn xuống (Sticky Header) */
+        .table-responsive-container thead th {
+            position: sticky;
+            top: 0;
+            background-color: #212529;
+            /* Màu nền header bảng */
+            color: white;
+            z-index: 1;
+        }
+    </style>
+</head>
+
+<body class="bg-light">
+    <div class="container mt-4">
+        <a href="/" class="btn btn-secondary mb-3">&larr; Quay lại Trang chủ</a>
+        <h2 class="text-danger mb-3">Quản Lý Chi Phí (Theo Ngày Tháng)</h2>
+
+        <!-- Form Thêm Chi Phí -->
+        <div class="card shadow mb-4 p-3">
+            <h5 class="text-secondary mb-3">Thêm Khoản Chi Mới</h5>
+            <form action="/expenses/add" method="POST" class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Số tiền chi (VNĐ)</label>
+                    <input type="number" step="any" name="amount" class="form-control" required
+                        placeholder="VD: 150000">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Khoản chi</label>
+                    <input type="text" name="category" class="form-control" required
+                        placeholder="VD: Nhập hàng, Ăn uống...">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Ngày chi</label>
+                    <input type="date" name="date" class="form-control" required
+                        value="<%= new Date().toISOString().split('T')[0] %>">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Ghi chú</label>
+                    <input type="text" name="note" class="form-control" placeholder="Ghi chú thêm...">
+                </div>
+                <div class="col-md-1 d-flex align-items-end">
+                    <button type="submit" class="btn btn-danger w-100">Thêm</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Bộ lọc và Xuất Excel Chi Phí -->
+        <div class="card shadow p-3 mb-4">
+            <form action="/expenses" method="GET" class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label">Từ ngày:</label>
+                    <input type="date" name="from" class="form-control"
+                        value="<%= typeof from !== 'undefined' ? from : '' %>" id="filterFrom">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Đến ngày:</label>
+                    <input type="date" name="to" class="form-control" value="<%= typeof to !== 'undefined' ? to : '' %>"
+                        id="filterTo">
+                </div>
+                <div class="col-md-6 d-flex gap-2 align-items-center">
+                    <button type="submit" class="btn btn-danger">Lọc</button>
+                    <a href="/expenses" class="btn btn-outline-secondary">Tất cả</a>
+
+                    <!-- Nút Xuất Excel Chi Phí bám theo bộ lọc -->
+                    <a href="#" id="exportExcelBtn" class="btn btn-outline-danger ms-auto">📊 Xuất Excel</a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Bảng danh sách chi phí có thanh cuộn chuyên nghiệp -->
+        <div class="card shadow p-3">
+            <% let totalAmount=0; if (expenses && expenses.length> 0) {
+                expenses.forEach(item => {
+                totalAmount += Number(item.amount) || 0;
+                });
+                }
+                %>
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h4 class="mb-0">Danh Sách Chi Phí</h4>
+                    <span class="badge bg-danger fs-6">Tổng chi phí: <%= totalAmount.toLocaleString('vi-VN') %> đ</span>
+                </div>
+
+                <!-- Khung cuộn -->
+                <div class="table-responsive-container">
+                    <table class="table table-striped align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Ngày</th>
+                                <th>Khoản Chi</th>
+                                <th>Số Tiền</th>
+                                <th>Ghi Chú</th>
+                                <th>Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% if(!expenses || expenses.length===0) { %>
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted py-4">Chưa có dữ liệu chi phí nào.
+                                    </td>
+                                </tr>
+                                <% } else { %>
+                                    <% expenses.forEach(item=> { %>
+                                        <tr>
+                                            <td>
+                                                <%= item.date %>
+                                            </td>
+                                            <td><strong>
+                                                    <%= item.category %>
+                                                </strong></td>
+                                            <td class="text-danger fw-bold">- <%=
+                                                    Number(item.amount).toLocaleString('vi-VN') %> đ</td>
+                                            <td>
+                                                <%= item.note || '' %>
+                                            </td>
+                                            <td>
+                                                <button type="button" class="btn btn-sm btn-warning btn-edit"
+                                                    data-id="<%= item.id %>" data-amount="<%= item.amount %>"
+                                                    data-category="<%= item.category %>"
+                                                    data-note="<%= item.note || '' %>"
+                                                    data-date="<%= item.date %>">Sửa</button>
+                                                <form action="/expenses/delete/<%= item.id %>" method="POST"
+                                                    style="display:inline;"
+                                                    onsubmit="return confirm('Xóa khoản chi này chứ?');">
+                                                    <button type="submit" class="btn btn-sm btn-danger">Xóa</button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                        <% }) %>
+                                            <% } %>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Dòng tổng cộng nằm ngoài khung cuộn hoặc cố định bên dưới -->
+                <% if(expenses && expenses.length> 0) { %>
+                    <div
+                        class="d-flex justify-content-between align-items-center bg-danger bg-opacity-10 p-3 mt-2 rounded fw-bold">
+                        <span>TỔNG CỘNG CHI PHÍ:</span>
+                        <span class="text-danger fs-5">- <%= totalAmount.toLocaleString('vi-VN') %> đ</span>
+                    </div>
+                    <% } %>
+        </div>
+    </div>
+
+    <!-- Modal Sửa Chi Phí -->
+    <div class="modal fade" id="editExpenseModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form id="editExpenseForm" method="POST">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Cập Nhật Chi Phí</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Số Tiền (VNĐ)</label>
+                            <input type="number" class="form-control" name="amount" id="edit_exp_amount" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Khoản Chi</label>
+                            <input type="text" class="form-control" name="category" id="edit_exp_category" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Ghi Chú</label>
+                            <textarea class="form-control" name="note" id="edit_exp_note"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Ngày</label>
+                            <input type="date" class="form-control" name="date" id="edit_exp_date" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-danger">Lưu Thay Đổi</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Xử lý modal sửa
+        document.querySelectorAll('.btn-edit').forEach(button => {
+            button.addEventListener('click', function () {
+                const id = this.getAttribute('data-id');
+                const amount = this.getAttribute('data-amount');
+                const category = this.getAttribute('data-category');
+                const note = this.getAttribute('data-note');
+                const date = this.getAttribute('data-date');
+
+                document.getElementById('editExpenseForm').action = '/expenses/edit/' + id;
+                document.getElementById('edit_exp_amount').value = amount;
+                document.getElementById('edit_exp_category').value = category;
+                document.getElementById('edit_exp_note').value = note;
+                document.getElementById('edit_exp_date').value = date;
+
+                var myModal = new bootstrap.Modal(document.getElementById('editExpenseModal'));
+                myModal.show();
+            });
+        });
+
+        // Xuất Excel bám theo bộ lọc ngày
+        document.getElementById('exportExcelBtn').addEventListener('click', function (e) {
+            e.preventDefault();
+            const from = document.getElementById('filterFrom').value;
+            const to = document.getElementById('filterTo').value;
+
+            let url = '/expenses/export?';
+            if (from) url += 'from=' + from + '&';
+            if (to) url += 'to=' + to;
+
+            window.location.href = url;
+        });
+    </script>
+</body>
+
+</html>

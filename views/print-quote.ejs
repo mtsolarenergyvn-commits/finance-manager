@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Bảng Báo Giá - Cty TNHH MT Solar Energy Việt Nam</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @page {
+            size: A4;
+            margin: 15mm 15mm;
+        }
+
+        body {
+            background: #eef2f5;
+            font-family: 'Times New Roman', Times, serif, Arial, sans-serif;
+            color: #000;
+            margin: 0;
+            padding: 0;
+        }
+
+        .invoice-box {
+            background: #fff;
+            width: 210mm;
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 0;
+        }
+
+        .logo-img {
+            max-height: 55px;
+            width: auto;
+        }
+
+        .company-title {
+            font-weight: bold;
+            color: #198754;
+            text-transform: uppercase;
+            font-size: 1.05rem;
+        }
+
+        .table th {
+            background-color: #f8f9fa !important;
+            font-size: 0.9rem;
+            text-align: center;
+            padding: 10px;
+        }
+
+        .table td {
+            font-size: 0.9rem;
+            vertical-align: middle;
+            padding: 10px 12px;
+        }
+
+        .total-box {
+            background-color: #fcfcfc;
+            border: 1px dashed #bbb;
+            padding: 10px 18px;
+            border-radius: 4px;
+            float: right;
+            min-width: 400px;
+        }
+
+        @media print {
+            body {
+                background: none;
+            }
+
+            .invoice-box {
+                border: none;
+                box-shadow: none;
+                margin: 0;
+                padding: 0;
+                width: 100%;
+            }
+
+            .no-print {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <!-- Nút điều khiển -->
+        <div class="text-end my-2 no-print">
+            <button onclick="window.print()" class="btn btn-success shadow-sm px-4 btn-sm">
+                <i class="fas fa-print"></i> In / Lưu PDF chuẩn A4
+            </button>
+            <a href="/quote" class="btn btn-secondary shadow-sm px-3 btn-sm">Quay lại</a>
+        </div>
+
+        <!-- Khung trang in A4 chính thức -->
+        <div class="invoice-box">
+            <!-- Header công ty & Logo -->
+            <div class="row mb-3 align-items-center border-bottom pb-3">
+                <div class="col-7 d-flex align-items-center">
+                    <img src="/images/header-logo.png" alt="MT Solar Logo" class="logo-img me-3"
+                        onerror="this.style.display='none'">
+                    <div>
+                        <h6 class="company-title mb-1">Cty TNHH MT Solar Energy Việt Nam</h6>
+                        <p class="mb-0 text-muted" style="font-size: 0.78rem;">MST: 0319650549 | ĐC: 340/34 Trần Thị
+                            Năm, P. Tân Chánh Hiệp, Q.12, TP.HCM</p>
+                        <p class="mb-0 text-muted" style="font-size: 0.78rem;">Website: mtsolarenergy.com</p>
+                    </div>
+                </div>
+                <div class="col-5 text-end">
+                    <h4 class="fw-bold text-dark mb-1" style="font-size: 1.3rem;">BẢNG BÁO GIÁ</h4>
+                    <p class="text-muted mb-0" style="font-size: 0.82rem;">Mã chứng từ: <strong>
+                            <%= quote.code %>
+                        </strong></p>
+                    <p class="text-muted mb-0" style="font-size: 0.82rem;">Ngày: <%= quote.date %>
+                    </p>
+                    <p class="text-muted mb-0" style="font-size: 0.82rem;">Hiệu lực đến: <strong>
+                            <%= quote.validUntil || '7 ngày' %>
+                        </strong></p>
+                </div>
+            </div>
+
+            <!-- Thông tin khách hàng & Nhân viên -->
+            <div class="row mb-3 bg-light p-3 rounded mx-0 align-items-center">
+                <div class="col-7">
+                    <span class="text-secondary d-block" style="font-size: 0.75rem;">ĐƠN VỊ / KHÁCH HÀNG:</span>
+                    <strong class="text-dark" style="font-size: 0.95rem;">
+                        <%= quote.customer %>
+                    </strong>
+                    <% if (quote.taxCode) { %>
+                        <span class="text-muted d-block" style="font-size: 0.78rem;">MST: <%= quote.taxCode %></span>
+                        <% } %>
+                            <% if (quote.phone) { %>
+                                <span class="text-muted d-block" style="font-size: 0.78rem;">SĐT: <%= quote.phone %>
+                                </span>
+                                <% } %>
+                </div>
+                <div class="col-5 text-end">
+                    <span class="text-secondary d-block" style="font-size: 0.75rem;">NHÂN VIÊN PHỤ TRÁCH:</span>
+                    <strong class="text-dark" style="font-size: 0.95rem;">
+                        <%= quote.employee %>
+                    </strong>
+                    <span class="text-muted d-block" style="font-size: 0.78rem;">Phòng Kinh Doanh</span>
+                </div>
+            </div>
+
+            <!-- Bảng danh sách thiết bị / sản phẩm -->
+            <table class="table table-bordered align-middle mb-3">
+                <thead>
+                    <tr>
+                        <th width="6%">STT</th>
+                        <th width="36%">Tên Thiết Bị / Sản Phẩm</th>
+                        <th width="10%">ĐVT</th>
+                        <th width="8%">SL</th>
+                        <th width="15%">Đơn Giá</th>
+                        <th width="7%">CK</th>
+                        <th width="18%">Thành Tiền</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% let subTotal=0; if (Array.isArray(items) && items.length> 0) {
+                        items.forEach((item, index) => {
+                        let lineAmount = Number(item.amount || (item.quantity * item.unit_price) || 0);
+                        subTotal += lineAmount;
+                        %>
+                        <tr>
+                            <td class="text-center">
+                                <%= index + 1 %>
+                            </td>
+                            <td>
+                                <%= item.product %>
+                            </td>
+                            <td class="text-center">
+                                <%= item.unit || 'Bộ' %>
+                            </td>
+                            <td class="text-center">
+                                <%= item.quantity %>
+                            </td>
+                            <td class="text-end">
+                                <%= Number(item.unit_price || 0).toLocaleString() %>
+                            </td>
+                            <td class="text-center">
+                                <%= item.discount || 0 %>%
+                            </td>
+                            <td class="text-end fw-bold">
+                                <%= lineAmount.toLocaleString() %>
+                            </td>
+                        </tr>
+                        <% }); } %>
+                </tbody>
+            </table>
+
+            <!-- Tổng cộng tiền, VAT & tổng thanh toán -->
+            <% let vatRate=Number(quote.vatRate || 8); let vatAmount=subTotal * (vatRate / 100); let grandTotal=subTotal
+                + vatAmount; %>
+                <div class="clearfix mb-3">
+                    <div class="total-box text-end">
+                        <div class="mb-1">
+                            <span class="text-secondary me-3" style="font-size: 0.85rem;">Tổng tiền hàng:</span>
+                            <span class="fw-semibold" style="font-size: 0.9rem;">
+                                <%= subTotal.toLocaleString() %> VNĐ
+                            </span>
+                        </div>
+                        <% if (vatRate> 0) { %>
+                            <div class="mb-1">
+                                <span class="text-secondary me-3" style="font-size: 0.85rem;">Thuế VAT (<%= vatRate %>
+                                        %):</span>
+                                <span class="fw-semibold" style="font-size: 0.9rem;">
+                                    <%= vatAmount.toLocaleString() %> VNĐ
+                                </span>
+                            </div>
+                            <% } %>
+                                <div class="border-top pt-1 mt-1">
+                                    <span class="fw-bold text-secondary me-3" style="font-size: 0.9rem;">Tổng thanh
+                                        toán:</span>
+                                    <span class="text-success fw-bold fs-5">
+                                        <%= grandTotal.toLocaleString() %> VNĐ
+                                    </span>
+                                </div>
+                    </div>
+                </div>
+
+                <!-- Ghi chú & Thông tin tài khoản kèm QR code phóng to -->
+                <div class="mb-3 p-3 border-start border-3 border-success bg-light" style="font-size: 0.85rem;">
+                    <div class="row align-items-center">
+                        <div class="col-7">
+                            <strong>Ghi chú / Điều khoản:</strong>
+                            <div class="text-dark mt-1" style="white-space: pre-line;">
+                                <%= quote.note || 'Thanh toán trước khi giao hàng.' %>
+                            </div>
+                            <div class="mt-2 text-muted" style="font-size: 0.78rem;">
+                                <strong>STK:</strong> 51062507 - ACB PGD Hồ Văn Huê (CTY TNHH MT SOLAR ENERGY VIET NAM)
+                            </div>
+                        </div>
+                        <div
+                            class="col-5 text-end border-start border-secondary d-flex align-items-center justify-content-end">
+                            <div class="me-3 text-start" style="font-size: 0.75rem;">
+                                <span class="fw-bold text-primary">Quét QR chuyển khoản</span><br>
+                                Nội dung: <span class="fw-bold text-dark">
+                                    <%= quote.code %>
+                                </span>
+                            </div>
+                            <img src="/images/qr.jpg" alt="QR Code"
+                                style="width: 100px; height: 100px; object-fit: contain;"
+                                onerror="this.style.display='none'">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Khu vực chữ ký xác nhận -->
+                <div class="row text-center mt-4 pt-3">
+                    <div class="col-4">
+                        <p class="fw-bold mb-1" style="font-size: 0.9rem;">Người lập báo giá</p>
+                        <p class="fst-italic text-muted mb-0" style="font-size: 0.78rem;">(Ký, ghi rõ họ tên)</p>
+                        <div style="height: 65px;"></div>
+                        <p class="fw-semibold mb-0" style="font-size: 0.9rem;">
+                            <%= quote.employee %>
+                        </p>
+                    </div>
+                    <div class="col-4">
+                        <p class="fw-bold mb-1" style="font-size: 0.9rem;">Đại diện Khách hàng</p>
+                        <p class="fst-italic text-muted mb-0" style="font-size: 0.78rem;">(Ký, ghi rõ họ tên)</p>
+                        <div style="height: 65px;"></div>
+                        <p class="fw-semibold mb-0" style="font-size: 0.9rem;">&nbsp;</p>
+                    </div>
+                    <div class="col-4">
+                        <p class="fw-bold mb-1" style="font-size: 0.9rem;">Đại diện Cty MT Solar</p>
+                        <p class="fst-italic text-muted mb-0" style="font-size: 0.78rem;">(Đã duyệt báo giá)</p>
+
+                        <!-- Khu vực chồng ảnh con dấu và chữ ký -->
+                        <div style="height: 85px; position: relative; margin: 5px 0;">
+                            <img src="/images/condau.png"
+                                style="position: absolute; top: -12px; left: 50%; transform: translateX(-60%); width: 95px; opacity: 0.85; pointer-events: none;"
+                                alt="Con dấu" onerror="this.style.display='none'">
+                            <img src="/images/kyten.png"
+                                style="position: absolute; top: 2px; left: 50%; transform: translateX(-50%); width: 105px; z-index: 2;"
+                                alt="Chữ ký" onerror="this.style.display='none'">
+                        </div>
+
+                        <p class="fw-semibold mb-0" style="font-size: 0.9rem; position: relative; z-index: 2;">
+                            Người uỷ quyền</p>
+                    </div>
+                </div>
+        </div>
+    </div>
+
+</body>
+
+</html>

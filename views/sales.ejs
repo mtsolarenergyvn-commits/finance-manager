@@ -1,0 +1,425 @@
+<% const userLang=(typeof currentLang !=='undefined' && currentLang) ? currentLang : ((typeof lang !=='undefined' &&
+    lang) ? lang : 'vi' ); const texts={ vi: { title: "Quản Lý Đơn Hàng" , addBtn: "Thêm Đơn Hàng" ,
+    exportBtn: "Xuất File Excel" , employee: "Nhân viên" , product: "Sản phẩm" , qty: "Số lượng" , price: "Đơn giá" ,
+    discount: "Chiết khấu (%)" , total: "Thành tiền" , customer: "Khách hàng" , date: "Ngày" , note: "Ghi chú" }, en: {
+    title: "Sales Management" , addBtn: "Add Order" , exportBtn: "Export Excel" , employee: "Employee" ,
+    product: "Product" , qty: "Quantity" , price: "Unit Price" , discount: "Discount (%)" , total: "Total Amount" ,
+    customer: "Customer" , date: "Date" , note: "Note" }, cn: { title: "订单管理" , addBtn: "添加订单" , exportBtn: "导出 Excel" ,
+    employee: "员工" , product: "产品" , qty: "数量" , price: "单价" , discount: "折扣 (%)" , total: "总计金额" , customer: "客户" ,
+    date: "日期" , note: "备注" } }; const t=texts[userLang] || texts.vi; %>
+
+    <!DOCTYPE html>
+    <html lang="<%= userLang %>">
+
+    <head>
+        <meta charset="UTF-8">
+        <title>
+            <%= t.title %>
+        </title>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+        <!-- Thêm thẻ style này vào để làm thanh cuộn chuyên nghiệp -->
+        <style>
+            .table-responsive-container {
+                max-height: 450px;
+                overflow-y: auto;
+                position: relative;
+            }
+
+            .table-responsive-container thead th {
+                position: sticky;
+                top: 0;
+                background-color: #212529;
+                color: white;
+                z-index: 1;
+            }
+        </style>
+    </head>
+
+    <body class="bg-light">
+        <div class="container mt-4 mb-5">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <a href="/" class="btn btn-secondary">&larr; Trang chủ</a>
+                <div class="d-flex align-items-center">
+                    <a href="/quote" class="btn btn-outline-success me-3 shadow-sm">
+                        <i class="fas fa-file-contract"></i> Tạo Báo Giá Nhanh
+                    </a>
+                    <div class="btn-group">
+                        <a href="/lang/vi"
+                            class="btn btn-sm <%= userLang === 'vi' ? 'btn-primary' : 'btn-outline-primary' %>">Tiếng
+                            Việt</a>
+                        <a href="/lang/en"
+                            class="btn btn-sm <%= userLang === 'en' ? 'btn-primary' : 'btn-outline-primary' %>">English</a>
+                        <a href="/lang/cn"
+                            class="btn btn-sm <%= userLang === 'cn' ? 'btn-danger' : 'btn-outline-danger' %>">中文</a>
+                    </div>
+                </div>
+            </div>
+
+            <h2 class="text-warning mb-3 fw-bold">
+                <%= t.title %>
+            </h2>
+
+            <!-- Form Thêm Đơn Hàng Nhiều Sản Phẩm -->
+            <form action="/sales/add" method="POST" class="mb-4">
+                <div class="card p-3 border-warning shadow-sm">
+                    <h5 class="text-warning mb-3 fw-bold"><i class="fas fa-cart-plus"></i> Tạo Đơn Hàng Mới</h5>
+
+                    <div class="row mb-3">
+                        <div class="col-md-3">
+                            <label class="form-label small fw-bold">
+                                <%= t.employee %>
+                            </label>
+                            <input type="text" class="form-control" name="employee" required
+                                placeholder="Tên nhân viên">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-bold">
+                                <%= t.customer %>
+                            </label>
+                            <input type="text" class="form-control" name="customer" placeholder="Tên khách hàng">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-bold">
+                                <%= t.date %>
+                            </label>
+                            <input type="date" class="form-control" name="date" required
+                                value="<%= new Date().toISOString().split('T')[0] %>">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-bold">
+                                <%= t.note %>
+                            </label>
+                            <input type="text" class="form-control" name="note" placeholder="Ghi chú đơn hàng...">
+                        </div>
+                    </div>
+
+                    <label class="form-label small fw-bold text-secondary">Danh sách sản phẩm / thiết bị:</label>
+                    <div id="product-rows-container">
+                        <div class="row product-item mb-2 align-items-center">
+                            <div class="col-md-4">
+                                <input type="text" class="form-control form-control-sm" name="products"
+                                    placeholder="<%= t.product %>" required>
+                            </div>
+                            <div class="col-md-2">
+                                <input type="number" class="form-control form-control-sm qty" name="quantities"
+                                    placeholder="<%= t.qty %>" value="1" min="1" required oninput="calcRow(this)">
+                            </div>
+                            <div class="col-md-2">
+                                <input type="number" class="form-control form-control-sm price" name="unit_prices"
+                                    placeholder="<%= t.price %>" required oninput="calcRow(this)">
+                            </div>
+                            <div class="col-md-2">
+                                <input type="number" class="form-control form-control-sm disc" name="discounts"
+                                    placeholder="<%= t.discount %>" value="0" oninput="calcRow(this)">
+                            </div>
+                            <div class="col-md-2 d-flex">
+                                <input type="number" class="form-control form-control-sm amt me-1" name="amounts"
+                                    placeholder="<%= t.total %>" readonly required>
+                                <button type="button" class="btn btn-outline-danger btn-sm"
+                                    onclick="removeProductRow(this)" disabled><i class="fas fa-trash"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row justify-content-end mt-2 mb-3">
+                        <div class="col-md-5 text-end">
+                            <span class="fw-bold text-secondary">Tổng giá trị đơn hàng: </span>
+                            <span id="grand-total-display" class="fw-bold text-danger fs-5">0 VNĐ</span>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mt-2">
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="addProductRow()">
+                            <i class="fas fa-plus"></i> Thêm sản phẩm
+                        </button>
+                        <button type="submit" class="btn btn-warning fw-bold px-4">
+                            <i class="fas fa-save"></i> Lưu Đơn Hàng
+                        </button>
+                    </div>
+                </div>
+            </form>
+
+            <script>
+                function addProductRow() {
+                    const container = document.getElementById('product-rows-container');
+                    const firstRow = container.querySelector('.product-item');
+                    const newRow = firstRow.cloneNode(true);
+
+                    newRow.querySelectorAll('input').forEach(input => {
+                        if (input.name === 'quantities') input.value = '1';
+                        else if (input.name === 'discounts') input.value = '0';
+                        else input.value = '';
+                    });
+                    newRow.querySelector('.btn-outline-danger').removeAttribute('disabled');
+                    container.appendChild(newRow);
+                    updateGrandTotal();
+                }
+
+                function removeProductRow(btn) {
+                    const row = btn.closest('.product-item');
+                    row.remove();
+                    updateGrandTotal();
+                }
+
+                function calculateRow(input) {
+                    const row = input.closest('.product-item');
+                    const qty = parseFloat(row.querySelector('.qty').value) || 0;
+                    const price = parseFloat(row.querySelector('.price').value) || 0;
+                    const disc = parseFloat(row.querySelector('.disc').value) || 0;
+
+                    let total = qty * price;
+                    if (disc > 0) {
+                        total = total - (total * disc / 100);
+                    }
+
+                    row.querySelector('.amt').value = Math.round(total);
+                    updateGrandTotal();
+                }
+
+                function calcRow(input) {
+                    calculateRow(input);
+                }
+
+                function updateGrandTotal() {
+                    let grandTotal = 0;
+                    document.querySelectorAll('.product-item').forEach(row => {
+                        const amt = parseFloat(row.querySelector('.amt').value) || 0;
+                        grandTotal += amt;
+                    });
+                    document.getElementById('grand-total-display').innerText = grandTotal.toLocaleString('vi-VN') + ' VNĐ';
+                }
+            </script>
+
+            <!-- Bảng danh sách đơn hàng -->
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title mb-3 fw-bold text-secondary">📋 Danh Sách Đơn Hàng</h5>
+
+                    <form method="GET" action="/sales" class="row g-3 mb-3">
+                        <div class="col-auto">
+                            <input type="date" name="from" value="<%= typeof from !== 'undefined' ? from : '' %>"
+                                class="form-control">
+                        </div>
+                        <div class="col-auto">
+                            <input type="date" name="to" value="<%= typeof to !== 'undefined' ? to : '' %>"
+                                class="form-control">
+                        </div>
+                        <div class="col-auto">
+                            <button type="submit" class="btn btn-primary fw-semibold">🔍 Lọc</button>
+                            <a href="/sales" class="btn btn-secondary fw-semibold">Tất cả</a>
+                            <a href="/sales/export?from=<%= typeof from !== 'undefined' ? from : '' %>&to=<%= typeof to !== 'undefined' ? to : '' %>"
+                                class="btn btn-success">
+                                <i class="fas fa-file-excel"></i>
+                                <%= t.exportBtn %>
+                            </a>
+                        </div>
+                    </form>
+
+                    <div class="table-responsive-container">
+                        <table class="table table-bordered table-striped align-middle text-center">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>
+                                        <%= t.employee %>
+                                    </th>
+                                    <th>
+                                        <%= t.product %>
+                                    </th>
+                                    <th>
+                                        <%= t.qty %>
+                                    </th>
+                                    <th>
+                                        <%= t.price %>
+                                    </th>
+                                    <th>
+                                        <%= t.discount %>
+                                    </th>
+                                    <th>
+                                        <%= t.total %>
+                                    </th>
+                                    <th>
+                                        <%= t.customer %>
+                                    </th>
+                                    <th>
+                                        <%= t.date %>
+                                    </th>
+                                    <th>Hành động</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% if (sales && sales.length> 0) { %>
+                                    <% sales.forEach(s=> { %>
+                                        <tr>
+                                            <td>
+                                                <%= s.id %>
+                                            </td>
+                                            <td class="fw-semibold">
+                                                <%= s.employee %>
+                                            </td>
+                                            <td>
+                                                <%= s.product %>
+                                            </td>
+                                            <td>
+                                                <%= s.quantity %>
+                                            </td>
+                                            <td>
+                                                <%= Number(s.unit_price || 0).toLocaleString() %>
+                                            </td>
+                                            <td>
+                                                <%= Number(s.discount || 0).toLocaleString() %>
+                                            </td>
+                                            <td class="fw-bold text-success">
+                                                <%= Number(s.amount || 0).toLocaleString() %>
+                                            </td>
+                                            <td>
+                                                <%= s.customer || 'Khách lẻ' %>
+                                            </td>
+                                            <td>
+                                                <%= s.date %>
+                                            </td>
+                                            <td>
+                                                <button type="button" class="btn btn-sm btn-warning mb-1"
+                                                    onclick="openEditModal('<%= s.id %>', '<%= s.employee %>', '<%= s.product %>', '<%= s.quantity %>', '<%= s.unit_price %>', '<%= s.discount %>', '<%= s.amount %>', '<%= s.customer %>', '<%= s.note %>', '<%= s.date %>')">Sửa</button>
+
+                                                <form action="/sales/delete/<%= s.id %>" method="POST"
+                                                    class="d-inline mb-1"
+                                                    onsubmit="return confirm('Bạn có chắc muốn xóa đơn này?');">
+                                                    <button type="submit" class="btn btn-sm btn-danger">Xóa</button>
+                                                </form>
+
+                                                <% let printKey=s.invoice_code ? s.invoice_code : s.id; %>
+                                                    <a href="/sales/invoice/<%= printKey %>" target="_blank"
+                                                        class="btn btn-sm btn-success text-white mb-1"
+                                                        title="In Phiếu Xuất Kho">
+                                                        <i class="fas fa-file-invoice"></i> Xuất Kho
+                                                    </a>
+                                            </td>
+                                        </tr>
+                                        <% }) %>
+                                            <% } else { %>
+                                                <tr>
+                                                    <td colspan="10" class="text-center text-muted py-3">Chưa có đơn
+                                                        hàng nào.</td>
+                                                </tr>
+                                                <% } %>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+        <!-- Modal Cập Nhật Đơn Hàng -->
+        <div class="modal fade" id="editSaleModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <form id="editSaleForm" method="POST">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Cập Nhật Đơn Hàng</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <input type="hidden" name="id" id="edit_id">
+                            <div class="mb-3">
+                                <label class="form-label">
+                                    <%= t.employee %>
+                                </label>
+                                <input type="text" class="form-control" name="employee" id="edit_employee" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">
+                                    <%= t.product %>
+                                </label>
+                                <input type="text" class="form-control" name="product" id="edit_product" required>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">
+                                        <%= t.qty %>
+                                    </label>
+                                    <input type="number" class="form-control" name="quantity" id="edit_quantity"
+                                        required oninput="calcEditTotal()">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">
+                                        <%= t.price %>
+                                    </label>
+                                    <input type="number" class="form-control" name="unit_price" id="edit_unit_price"
+                                        required oninput="calcEditTotal()">
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">
+                                        <%= t.discount %>
+                                    </label>
+                                    <input type="number" class="form-control" name="discount" id="edit_discount"
+                                        value="0" oninput="calcEditTotal()">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">
+                                        <%= t.total %>
+                                    </label>
+                                    <input type="number" class="form-control" name="amount" id="edit_amount" required
+                                        readonly>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">
+                                    <%= t.customer %>
+                                </label>
+                                <input type="text" class="form-control" name="customer" id="edit_customer">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">
+                                    <%= t.note %>
+                                </label>
+                                <textarea class="form-control" name="note" id="edit_note"></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">
+                                    <%= t.date %>
+                                </label>
+                                <input type="date" class="form-control" name="date" id="edit_date" required>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                            <button type="submit" class="btn btn-primary">Lưu Thay Đổi</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            function openEditModal(id, employee, product, quantity, unit_price, discount, amount, customer, note, date) {
+                document.getElementById('editSaleForm').action = '/sales/edit/' + id;
+                document.getElementById('edit_employee').value = employee;
+                document.getElementById('edit_product').value = product;
+                document.getElementById('edit_quantity').value = quantity;
+                document.getElementById('edit_unit_price').value = unit_price;
+                document.getElementById('edit_discount').value = discount || 0;
+                document.getElementById('edit_amount').value = amount || (quantity * unit_price * (1 - (discount || 0) / 100));
+                document.getElementById('edit_customer').value = (customer === 'Khách lẻ') ? '' : customer;
+                document.getElementById('edit_note').value = note;
+                document.getElementById('edit_date').value = date;
+
+                var myModal = new bootstrap.Modal(document.getElementById('editSaleModal'));
+                myModal.show();
+            }
+
+            function calcEditTotal() {
+                let qty = parseFloat(document.getElementById('edit_quantity').value) || 0;
+                let price = parseFloat(document.getElementById('edit_unit_price').value) || 0;
+                let disc = parseFloat(document.getElementById('edit_discount').value) || 0;
+                let total = qty * price * (1 - disc / 100);
+                document.getElementById('edit_amount').value = total.toFixed(0);
+            }
+        </script>
+    </body>
+
+    </html>
