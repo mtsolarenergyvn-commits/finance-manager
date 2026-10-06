@@ -241,17 +241,22 @@
                                 </p>
 
                                 <!-- Khu vực chồng ảnh con dấu và chữ ký -->
-                                <div style="height: 85px; position: relative; margin: 5px 0;">
+                                <div style="height: 120px; position: relative; margin: 0;">
+                                    <!-- Con dấu: Đẩy lên cao hơn nữa (top: -45px) để né hẳn dòng chữ bên dưới -->
                                     <img src="/images/condau.png"
-                                        style="position: absolute; top: -12px; left: 50%; transform: translateX(-60%); width: 95px; opacity: 0.85; pointer-events: none;"
-                                        alt="Con dấu">
+                                        style="position: absolute; top: -45px; left: 50%; transform: translateX(-55%); width: 175px; opacity: 0.88; pointer-events: none;"
+                                        alt="Con dấu" onerror="this.style.display='none'">
+
+                                    <!-- Chữ ký: Nằm đè lên trên con dấu -->
                                     <img src="/images/kyten.png"
-                                        style="position: absolute; top: 2px; left: 50%; transform: translateX(-50%); width: 105px; z-index: 2;"
-                                        alt="Chữ ký">
+                                        style="position: absolute; top: -15px; left: 50%; transform: translateX(-50%); width: 150px; z-index: 2;"
+                                        alt="Chữ ký" onerror="this.style.display='none'">
                                 </div>
 
+                                <!-- Dòng chữ bên dưới sẽ nằm cách biệt hoàn toàn, không bị dấu che nữa -->
                                 <p class="fw-semibold mb-0" style="font-size: 0.9rem; position: relative; z-index: 2;">
-                                    Người uỷ quyền</p>
+                                    Người uỷ quyền
+                                </p>
                             </div>
                         </div>
         </div>

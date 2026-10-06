@@ -127,7 +127,27 @@ app.use((req, res, next) => {
     res.locals.t = dict[lang];
     next();
 });
+app.use((req, res, next) => {
+    // Chỉ bắt các hành động thay đổi dữ liệu (Thêm, Sửa, Xóa)
+    if (['POST', 'PUT', 'DELETE'].includes(req.method)) {
+        const username = req.session && req.session.username ? req.session.username : 'unknown';
+        const action = `${req.method} ${req.path}`;
+        const details = JSON.stringify(req.body || {});
 
+        // Ghi trực tiếp vào database bằng biến db hiện có của app
+        try {
+            db.run('INSERT INTO audit_logs (username, action, details) VALUES (?, ?, ?)',
+                [username, action, details],
+                (err) => {
+                    if (err) console.error('Lỗi ghi audit log:', err.message);
+                }
+            );
+        } catch (e) {
+            console.error('Lỗi ngoại lệ khi ghi log:', e);
+        }
+    }
+    next();
+});
 const db = new sqlite3.Database(path.join(__dirname, 'finance.db'), (err) => {
     if (err) console.error('Lỗi DB:', err.message);
     else console.log('Đã kết nối SQLite thành công.');
@@ -273,7 +293,21 @@ function generateCode(prefix, count) {
     const seq = String(count || 1).padStart(2, '0');
     return `#${prefix}-${day}${month}${year}${seq}`;
 }
+// Hàm ghi vết thao tác người dùng
+function logAction(username, action, details) {
+    const db = require('better-sqlite3')('finance.db'); // Hoặc module kết nối sqlite bạn đang dùng trong dự án
+    const stmt = db.prepare('INSERT INTO audit_logs (username, action, details) VALUES (?, ?, ?)');
+    stmt.run(username || 'guest', action, details);
+}
 
+function recordAudit(username, action, details) {
+    try {
+        const db = require('better-sqlite3')('finance.db');
+        db.prepare('INSERT INTO audit_logs (username, action, details) VALUES (?, ?, ?)').run(username || 'system', action, details);
+    } catch (err) {
+        console.error('Lỗi ghi audit log:', err);
+    }
+}
 // ==================== AUTH & ACCOUNT ROUTES ====================
 app.get('/login', (req, res) => res.render('login', { error: null }));
 

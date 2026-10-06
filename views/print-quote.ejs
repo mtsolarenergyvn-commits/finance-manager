@@ -220,28 +220,30 @@
                     </div>
                 </div>
 
-                <!-- Ghi chú & Thông tin tài khoản kèm QR code phóng to -->
+                <!-- Ghi chú & Thông tin tài khoản kèm QR code -->
                 <div class="mb-3 p-3 border-start border-3 border-success bg-light" style="font-size: 0.85rem;">
                     <div class="row align-items-center">
-                        <div class="col-7">
+                        <!-- Giảm cột trái xuống col-6 để nhường chỗ -->
+                        <div class="col-6">
                             <strong>Ghi chú / Điều khoản:</strong>
-                            <div class="text-dark mt-1" style="white-space: pre-line;">
+                            <div class="class text-dark mt-1" style="white-space: pre-line;">
                                 <%= quote.note || 'Thanh toán trước khi giao hàng.' %>
                             </div>
                             <div class="mt-2 text-muted" style="font-size: 0.78rem;">
                                 <strong>STK:</strong> 51062507 - ACB PGD Hồ Văn Huê (CTY TNHH MT SOLAR ENERGY VIET NAM)
                             </div>
                         </div>
+
+                        <!-- Tăng cột phải lên col-6 để QR code nằm gọn trong khung, không bị tràn -->
                         <div
-                            class="col-5 text-end border-start border-secondary d-flex align-items-center justify-content-end">
-                            <div class="me-3 text-start" style="font-size: 0.75rem;">
+                            class="col-6 text-end border-start border-secondary d-flex align-items-center justify-content-end">
+                            <div class="me-2 text-start" style="font-size: 0.75rem;">
                                 <span class="fw-bold text-primary">Quét QR chuyển khoản</span><br>
                                 Nội dung: <span class="fw-bold text-dark">
                                     <%= quote.code %>
                                 </span>
                             </div>
-                            <img src="/images/qr.jpg" alt="QR Code"
-                                style="width: 100px; height: 100px; object-fit: contain;"
+                            <img src="/images/qr.jpg" alt="QR Code" style="width: 135px; height: auto; display: block;"
                                 onerror="this.style.display='none'">
                         </div>
                     </div>
@@ -268,17 +270,22 @@
                         <p class="fst-italic text-muted mb-0" style="font-size: 0.78rem;">(Đã duyệt báo giá)</p>
 
                         <!-- Khu vực chồng ảnh con dấu và chữ ký -->
-                        <div style="height: 85px; position: relative; margin: 5px 0;">
+                        <div style="height: 120px; position: relative; margin: 0;">
+                            <!-- Con dấu: Đẩy lên cao hơn nữa (top: -45px) để né hẳn dòng chữ bên dưới -->
                             <img src="/images/condau.png"
-                                style="position: absolute; top: -12px; left: 50%; transform: translateX(-60%); width: 95px; opacity: 0.85; pointer-events: none;"
+                                style="position: absolute; top: -45px; left: 50%; transform: translateX(-55%); width: 175px; opacity: 0.88; pointer-events: none;"
                                 alt="Con dấu" onerror="this.style.display='none'">
+
+                            <!-- Chữ ký: Nằm đè lên trên con dấu -->
                             <img src="/images/kyten.png"
-                                style="position: absolute; top: 2px; left: 50%; transform: translateX(-50%); width: 105px; z-index: 2;"
+                                style="position: absolute; top: -15px; left: 50%; transform: translateX(-50%); width: 150px; z-index: 2;"
                                 alt="Chữ ký" onerror="this.style.display='none'">
                         </div>
 
+                        <!-- Dòng chữ bên dưới sẽ nằm cách biệt hoàn toàn, không bị dấu che nữa -->
                         <p class="fw-semibold mb-0" style="font-size: 0.9rem; position: relative; z-index: 2;">
-                            Người uỷ quyền</p>
+                            Người uỷ quyền
+                        </p>
                     </div>
                 </div>
         </div>
