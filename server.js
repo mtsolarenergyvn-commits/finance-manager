@@ -218,22 +218,6 @@ db.serialize(() => {
     )`);
 
 });
-// Danh sách tài khoản mẫu cần khởi tạo
-const defaultUsers = [
-    ['adminkhang', '123123', 'super admin'],
-    ['admin1', '123123', 'admin'],
-    ['admin2', '123123', 'admin'],
-    ['liyongmng', '123456', 'manager'],
-    ['uyensale1', '123456', 'staff'],
-    ['khangsale2', '123456', 'staff'],
-    ['namsale3', '123456', 'staff'],
-    ['thucsale4', '123456', 'staff'],
-    ['hungsale5', '123456', 'staff'],
-    ['tramsale6', '123456', 'staff'],
-    ['trieusale7', '123456', 'staff'],
-    ['lanwh1', '123456', 'staff'],
-    ['thoanwh2', '123456', 'staff']
-];
 
 // Chèn tự động vào database nếu chưa tồn tại
 defaultUsers.forEach(([username, password, role]) => {
