@@ -219,15 +219,6 @@ db.serialize(() => {
 
 });
 
-// Chèn tự động vào database nếu chưa tồn tại
-defaultUsers.forEach(([username, password, role]) => {
-    db.get(`SELECT * FROM users WHERE username = ?`, [username], (err, row) => {
-        if (!row) {
-            db.run(`INSERT INTO users (username, password, role) VALUES (?, ?, ?)`, [username, password, role]);
-        }
-    });
-});
-
 const checkAuth = (req, res, next) => req.session && req.session.loggedIn ? next() : res.redirect('/login');
 
 app.get('/lang/:locale', (req, res) => {
