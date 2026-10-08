@@ -135,130 +135,149 @@
                 </div>
             </div>
 
-            <!-- Bảng danh sách thiết bị / sản phẩm -->
-            <table class="table table-bordered align-middle mb-3">
-                <thead>
-                    <tr>
-                        <th width="6%">STT</th>
-                        <th width="36%">Tên Thiết Bị / Sản Phẩm</th>
-                        <th width="10%">ĐVT</th>
-                        <th width="8%">SL</th>
-                        <th width="15%">Đơn Giá</th>
-                        <th width="7%">CK</th>
-                        <th width="18%">Thành Tiền</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <% let subTotal=0; items.forEach((item, index)=> {
-                        subTotal += Number(item.amount || 0);
-                        %>
-                        <tr>
-                            <td class="text-center">
-                                <%= index + 1 %>
-                            </td>
-                            <td>
-                                <%= item.product %>
-                            </td>
-                            <td class="text-center">
-                                <%= item.unit || 'Bộ' %>
-                            </td>
-                            <td class="text-center">
-                                <%= item.quantity %>
-                            </td>
-                            <td class="text-end">
-                                <%= Number(item.unit_price || 0).toLocaleString() %>
-                            </td>
-                            <td class="text-center">
-                                <%= item.discount || 0 %>%
-                            </td>
-                            <td class="text-end fw-bold">
-                                <%= Number(item.amount || 0).toLocaleString() %>
-                            </td>
-                        </tr>
-                        <% }) %>
-                </tbody>
-            </table>
 
-            <!-- Tổng cộng tiền, VAT & tổng thanh toán -->
-            <% let vatRate=Number(items[0].vatRate) || 0; let vatAmount=subTotal * (vatRate / 100); let
-                grandTotal=subTotal + vatAmount; %>
-                <div class="clearfix mb-3">
-                    <div class="total-box text-end">
-                        <div class="mb-1">
-                            <span class="text-secondary me-3" style="font-size: 0.85rem;">Tổng tiền hàng:</span>
-                            <span class="fw-semibold" style="font-size: 0.9rem;">
-                                <%= subTotal.toLocaleString() %> VNĐ
-                            </span>
-                        </div>
-                        <% if (vatRate> 0) { %>
+            <% // Kiểm tra xem có bất kỳ sản phẩm nào trong phiếu có chiết khấu> 0 hay không
+                let hasDiscount = false;
+                if (typeof items !== 'undefined' && Array.isArray(items)) {
+                hasDiscount = items.some(i => i.discount && Number(i.discount) > 0);
+                }
+                %>
+
+                <!-- Bảng danh sách thiết bị / sản phẩm -->
+                <table class="table table-bordered align-middle mb-3">
+                    <thead>
+                        <tr>
+                            <th width="6%">STT</th>
+                            <th width="<%= hasDiscount ? '36%' : '43%' %>">Tên Thiết Bị / Sản Phẩm</th>
+                            <th width="10%">ĐVT</th>
+                            <th width="8%">SL</th>
+                            <th width="15%">Đơn Giá</th>
+                            <% if (hasDiscount) { %>
+                                <th width="7%">CK</th>
+                                <% } %>
+                                    <th width="18%">Thành Tiền</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% let subTotal=0; if (typeof items !=='undefined' && Array.isArray(items)) {
+                            items.forEach((item, index)=> {
+                            subTotal += Number(item.amount || 0);
+                            let discountVal = item.discount ? Number(item.discount) : 0;
+                            %>
+                            <tr>
+                                <td class="text-center">
+                                    <%= index + 1 %>
+                                </td>
+                                <td>
+                                    <%= item.product %>
+                                </td>
+                                <td class="text-center">
+                                    <%= item.unit || 'Bộ' %>
+                                </td>
+                                <td class="text-center">
+                                    <%= item.quantity %>
+                                </td>
+                                <td class="text-end">
+                                    <%= Number(item.unit_price || 0).toLocaleString() %>
+                                </td>
+                                <% if (hasDiscount) { %>
+                                    <td class="text-center">
+                                        <%= discountVal> 0 ? discountVal + '%' : '-' %>
+                                    </td>
+                                    <% } %>
+                                        <td class="text-end fw-bold">
+                                            <%= Number(item.amount || 0).toLocaleString() %>
+                                        </td>
+                            </tr>
+                            <% }); } %>
+                    </tbody>
+                </table>
+
+                <!-- Tổng cộng tiền, VAT & tổng thanh toán -->
+                <% let vatRate=Number(items[0].vatRate) || 0; let vatAmount=subTotal * (vatRate / 100); let
+                    grandTotal=subTotal + vatAmount; %>
+                    <div class="clearfix mb-3">
+                        <div class="total-box text-end">
                             <div class="mb-1">
-                                <span class="text-secondary me-3" style="font-size: 0.85rem;">Thuế VAT (<%= vatRate %>
-                                        %):</span>
+                                <span class="text-secondary me-3" style="font-size: 0.85rem;">Tổng tiền hàng:</span>
                                 <span class="fw-semibold" style="font-size: 0.9rem;">
-                                    <%= vatAmount.toLocaleString() %> VNĐ
+                                    <%= subTotal.toLocaleString() %> VNĐ
                                 </span>
                             </div>
-                            <% } %>
-                                <div class="border-top pt-1 mt-1">
-                                    <span class="fw-bold text-secondary me-3" style="font-size: 0.9rem;">Tổng thanh
-                                        toán:</span>
-                                    <span class="text-success fw-bold fs-5">
-                                        <%= grandTotal.toLocaleString() %> VNĐ
+                            <% if (vatRate> 0) { %>
+                                <div class="mb-1">
+                                    <span class="text-secondary me-3" style="font-size: 0.85rem;">Thuế VAT (<%= vatRate
+                                            %>
+                                            %):</span>
+                                    <span class="fw-semibold" style="font-size: 0.9rem;">
+                                        <%= vatAmount.toLocaleString() %> VNĐ
                                     </span>
                                 </div>
-                    </div>
-                </div>
-
-                <% if (items[0].note) { %>
-                    <div class="mb-3 p-3 border-start border-3 border-success bg-light" style="font-size: 0.85rem;">
-                        <strong>Ghi chú / Điều khoản:</strong>
-                        <%= items[0].note %>
-                    </div>
-                    <% } %>
-
-                        <!-- Khu vực chữ ký xác nhận -->
-                        <div class="row text-center mt-4 pt-3">
-                            <div class="col-4">
-                                <p class="fw-bold mb-1" style="font-size: 0.9rem;">Người lập phiếu</p>
-                                <p class="fst-italic text-muted mb-0" style="font-size: 0.78rem;">(Ký, ghi rõ họ tên)
-                                </p>
-                                <div style="height: 65px;"></div>
-                                <!-- Lấy thẳng tên nhân viên từ đơn hàng trong DB -->
-                                <p class="fw-semibold mb-0" style="font-size: 0.9rem;">
-                                    <%= items[0].employee || 'Phòng Kinh Doanh' %>
-                                </p>
-                            </div>
-                            <div class="col-4">
-                                <p class="fw-bold mb-1" style="font-size: 0.9rem;">Thợ / Khách nhận</p>
-                                <p class="fst-italic text-muted mb-0" style="font-size: 0.78rem;">(Ký, ghi rõ họ tên)
-                                </p>
-                                <div style="height: 65px;"></div>
-                                <p class="fw-semibold mb-0" style="font-size: 0.9rem;">&nbsp;</p>
-                            </div>
-                            <div class="col-4">
-                                <p class="fw-bold mb-1" style="font-size: 0.9rem;">Đại diện Cty MT Solar</p>
-                                <p class="fst-italic text-muted mb-0" style="font-size: 0.78rem;">(Đã duyệt xuất kho)
-                                </p>
-
-                                <!-- Khu vực chồng ảnh con dấu và chữ ký -->
-                                <div style="height: 120px; position: relative; margin: 0;">
-                                    <!-- Con dấu: Đẩy lên cao hơn nữa (top: -45px) để né hẳn dòng chữ bên dưới -->
-                                    <img src="/images/condau.png"
-                                        style="position: absolute; top: -45px; left: 50%; transform: translateX(-55%); width: 175px; opacity: 0.88; pointer-events: none;"
-                                        alt="Con dấu" onerror="this.style.display='none'">
-
-                                    <!-- Chữ ký: Nằm đè lên trên con dấu -->
-                                    <img src="/images/kyten.png"
-                                        style="position: absolute; top: -15px; left: 50%; transform: translateX(-50%); width: 150px; z-index: 2;"
-                                        alt="Chữ ký" onerror="this.style.display='none'">
-                                </div>
-
-                                <!-- Dòng chữ bên dưới sẽ nằm cách biệt hoàn toàn, không bị dấu che nữa -->
-                                <p class="fw-semibold mb-0" style="font-size: 0.9rem; position: relative; z-index: 2;">
-                                    Người uỷ quyền
-                                </p>
-                            </div>
+                                <% } %>
+                                    <div class="border-top pt-1 mt-1">
+                                        <span class="fw-bold text-secondary me-3" style="font-size: 0.9rem;">Tổng thanh
+                                            toán:</span>
+                                        <span class="text-success fw-bold fs-5">
+                                            <%= grandTotal.toLocaleString() %> VNĐ
+                                        </span>
+                                    </div>
                         </div>
+                    </div>
+
+                    <% if (items[0].note) { %>
+                        <div class="mb-3 p-3 border-start border-3 border-success bg-light" style="font-size: 0.85rem;">
+                            <strong>Ghi chú / Điều khoản:</strong>
+                            <%= items[0].note %>
+                        </div>
+                        <% } %>
+
+                            <!-- Khu vực chữ ký xác nhận -->
+                            <div class="row text-center mt-4 pt-3">
+                                <div class="col-4">
+                                    <p class="fw-bold mb-1" style="font-size: 0.9rem;">Người lập phiếu</p>
+                                    <p class="fst-italic text-muted mb-0" style="font-size: 0.78rem;">(Ký, ghi rõ họ
+                                        tên)
+                                    </p>
+                                    <div style="height: 65px;"></div>
+                                    <!-- Lấy thẳng tên nhân viên từ đơn hàng trong DB -->
+                                    <p class="fw-semibold mb-0" style="font-size: 0.9rem;">
+                                        <%= items[0].employee || 'Phòng Kinh Doanh' %>
+                                    </p>
+                                </div>
+                                <div class="col-4">
+                                    <p class="fw-bold mb-1" style="font-size: 0.9rem;">Thợ / Khách nhận</p>
+                                    <p class="fst-italic text-muted mb-0" style="font-size: 0.78rem;">(Ký, ghi rõ họ
+                                        tên)
+                                    </p>
+                                    <div style="height: 65px;"></div>
+                                    <p class="fw-semibold mb-0" style="font-size: 0.9rem;">&nbsp;</p>
+                                </div>
+                                <div class="col-4">
+                                    <p class="fw-bold mb-1" style="font-size: 0.9rem;">Đại diện Cty MT Solar</p>
+                                    <p class="fst-italic text-muted mb-0" style="font-size: 0.78rem;">(Đã duyệt xuất
+                                        kho)
+                                    </p>
+
+                                    <!-- Khu vực chồng ảnh con dấu và chữ ký -->
+                                    <div style="height: 120px; position: relative; margin: 0;">
+                                        <!-- Con dấu: Đẩy lên cao hơn nữa (top: -45px) để né hẳn dòng chữ bên dưới -->
+                                        <img src="/images/condau.png"
+                                            style="position: absolute; top: -45px; left: 50%; transform: translateX(-55%); width: 175px; opacity: 0.88; pointer-events: none;"
+                                            alt="Con dấu" onerror="this.style.display='none'">
+
+                                        <!-- Chữ ký: Nằm đè lên trên con dấu -->
+                                        <img src="/images/kyten.png"
+                                            style="position: absolute; top: -15px; left: 50%; transform: translateX(-50%); width: 150px; z-index: 2;"
+                                            alt="Chữ ký" onerror="this.style.display='none'">
+                                    </div>
+
+                                    <!-- Dòng chữ bên dưới sẽ nằm cách biệt hoàn toàn, không bị dấu che nữa -->
+                                    <p class="fw-semibold mb-0"
+                                        style="font-size: 0.9rem; position: relative; z-index: 2;">
+                                        Người uỷ quyền
+                                    </p>
+                                </div>
+                            </div>
         </div>
     </div>
 

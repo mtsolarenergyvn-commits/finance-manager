@@ -153,7 +153,6 @@
                         <th width="10%">ĐVT</th>
                         <th width="8%">SL</th>
                         <th width="15%">Đơn Giá</th>
-                        <th width="7%">CK</th>
                         <th width="18%">Thành Tiền</th>
                     </tr>
                 </thead>
@@ -178,9 +177,6 @@
                             </td>
                             <td class="text-end">
                                 <%= Number(item.unit_price || 0).toLocaleString() %>
-                            </td>
-                            <td class="text-center">
-                                <%= item.discount || 0 %>%
                             </td>
                             <td class="text-end fw-bold">
                                 <%= lineAmount.toLocaleString() %>
